@@ -1,9 +1,11 @@
 package verbavoice.de.audiodescriptionplayer;
 
-import android.os.Bundle;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.*;
 import android.speech.tts.TextToSpeech;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -11,15 +13,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.*;
 import de.lits.infinoted.InfinotedClientException;
-import verbavoice.de.audiodescriptionplayer.infinoted.InfiManager;
-import verbavoice.de.audiodescriptionplayer.infinoted.TextListener;
-import verbavoice.de.audiodescriptionplayer.infinoted.VltConnectionListener;
 
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
 
-    private InfiManager infiManager = new InfiManager();
+    private PlayerService playerService;
+    boolean bound = false;
+
 
 
     private EditText hostEditText;
@@ -29,8 +30,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Button connectBtn;
     private Spinner spinner;
 
-    private TextToSpeech textToSpeech;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,39 +37,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
-        infiManager.setDelegate(new VltConnectionListener() {
-            @Override
-            public void onConnected() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(MainActivity.this,"connected!",Toast.LENGTH_SHORT).show();
-                        stateTextView.setText("Connected!");
-                        connectBtn.setText(R.string.disconnect);
-                    }
-                });
-            }
-
-            @Override
-            public void onConnectionError() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(MainActivity.this,"Error!",Toast.LENGTH_SHORT).show();
-                        stateTextView.setText("Error Connecting");
-                    }
-                });
-            }
-        });
-        infiManager.add(textListener);
         connectBtn = (Button) findViewById(R.id.connectButton);
         hostEditText = (EditText)findViewById(R.id.hostEditText);
         pathEditText = (EditText)findViewById(R.id.pathEditText);
@@ -82,26 +48,69 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        Intent intent = new Intent(this, PlayerService.class);
+        startService(intent);
+        MessageHandler handler = new MessageHandler();
+        intent.putExtra("MESSENGER", new Messenger(handler));
+        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+    }
+
+    private ServiceConnection connection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            PlayerService.LocalBinder binder = (PlayerService.LocalBinder) service;
+            playerService = binder.getService();
+             bound = true;
+            playerService.dismissNotification();
+            init(playerService.getLastText(), playerService.getConnectionState());
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            bound = false;
+        }
+    };
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Unbind from the service
+        Intent intent = new Intent(this, PlayerService.class);
+        boolean connected = false;
+        if (bound) {
+            connected = playerService.isConnected();
+            unbindService(connection);
+            bound = false;
+        }
+        if(!connected){
+           stopService(intent);
+        }
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Intent intent = new Intent(this, PlayerService.class);
+        stopService(intent);
+    }
+
+    @Override
     protected void onResume() {
-        textToSpeech=new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if(status != TextToSpeech.ERROR) {
-                    textToSpeech.setLanguage(Locale.GERMANY);
-                    textToSpeech.setSpeechRate(1.6f);
-                }
-            }
-        });
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-        if(textToSpeech !=null){
-            textToSpeech.stop();
-            textToSpeech.shutdown();
-        }
         super.onPause();
+        if(playerService.isConnected()){
+            playerService.addNotification();
+        }
     }
 
     @Override
@@ -111,62 +120,105 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return true;
     }
 
-    private TextListener textListener = new TextListener() {
-        @Override
-        public void onTextUpdate(final String text) {
-            textView.post(new Runnable() {
-                @Override
-                public void run() {
-                    textView.setText(text);
-                    textToSpeech.speak(text,TextToSpeech.QUEUE_FLUSH,null);
-                }
-            });
 
-        }
+
+    public class MessageHandler extends  Handler {
 
         @Override
-        public void onLoading() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    stateTextView.setText("loading...");
-                }
-            });
-        }
-
-        @Override
-        public void onLoaded() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        stateTextView.setText(R.string.loaded);
-                    }
-                });
-        }
-
-        @Override
-        public void onError(final String message) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    connectBtn.setText(R.string.connect);
-                    stateTextView.setText("error:"+ message);
-                }
-            });
-        }
-
-        @Override
-        public void onConnectionError() {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    connectBtn.setText(R.string.connect);
-                    stateTextView.setText("on Connection Error");
-                }
-            });
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case PlayerMessages.TEXT_UPDATE:
+                    final String text = (String) msg.obj;
+                    updateText(text);
+                    break;
+                case PlayerMessages.ON_LOADING:
+                    onLoading();
+                    break;
+                case PlayerMessages.ON_LOADED:
+                    onLoaded();
+                    break;
+                case PlayerMessages.ON_ERROR:
+                    final String message = (String) msg.obj;
+                    onError(message);
+                    break;
+                case PlayerMessages.ON_CONNECTION_ERROR:
+                    onConnectionError();
+                    break;
+                case PlayerMessages.ON_CONNECTED:
+                    onConnected();
+                    break;
+                default:
+                    //do nothing
+            }
         }
     };
+
+    private void updateText(final String text) {
+        textView.post(new Runnable() {
+            @Override
+            public void run() {
+                textView.setText(text);
+            }
+        });
+    }
+
+    private void onLoading() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                stateTextView.setText("loading...");
+            }
+        });
+    }
+
+    private void onLoaded() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                stateTextView.setText(R.string.loaded);
+            }
+        });
+    }
+
+    private void onError(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                connectBtn.setText(R.string.connect);
+                stateTextView.setText("error:"+ message);
+            }
+        });
+    }
+
+    private void onConnectionError() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                connectBtn.setText(R.string.connect);
+                stateTextView.setText("on Connection Error");
+            }
+        });
+    }
+
+    private void onConnected() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(MainActivity.this,"connected!",Toast.LENGTH_SHORT).show();
+                stateTextView.setText("Connected!");
+                connectBtn.setText(R.string.disconnect);
+            }
+        });
+    }
+
+    private void init(String text, ConnectionState connectionState) {
+        updateText(text);
+        stateTextView.setText(connectionState.name());
+        if(!(connectionState == ConnectionState.CONNECTED))connectBtn.setText(R.string.connect);
+        else  connectBtn.setText(R.string.disconnect);
+
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -183,20 +235,20 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     public void connect(View view){
-        if(!infiManager.isConnected()){
+        if(!playerService.isConnected()){
             String host = hostEditText.getText().toString();
             String path = pathEditText.getText().toString();
 
 
             try {
-                infiManager.connect(host,path);
+                playerService.connect(host,path);
             } catch (InfinotedClientException e) {
                 e.printStackTrace();
                 Toast.makeText(this,"An error Occured!", Toast.LENGTH_SHORT).show();
             }
 
         }else {
-            infiManager.close();
+            playerService.close();
             connectBtn.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
@@ -217,21 +269,23 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
         String language = (String)adapterView.getSelectedItem();
-        switch (language){
-            case "GERMAN":
-                textToSpeech.setLanguage(Locale.GERMANY);
-                break;
-            case "ENGLISH":
-                textToSpeech.setLanguage(Locale.ENGLISH);
-                break;
-            case "ITALIAN":
-                textToSpeech.setLanguage(Locale.ITALY);
-                break;
-            case "FRENCH":
-                textToSpeech.setLanguage(Locale.FRANCE);
-                break;
-            default:
-                textToSpeech.setLanguage(Locale.GERMANY);
+        if(bound) {
+            switch (language){
+                case "GERMAN":
+                    playerService.setLanguage(Locale.GERMANY);
+                    break;
+                case "ENGLISH":
+                    playerService.setLanguage(Locale.ENGLISH);
+                    break;
+                case "ITALIAN":
+                    playerService.setLanguage(Locale.ITALY);
+                    break;
+                case "FRENCH":
+                    playerService.setLanguage(Locale.FRANCE);
+                    break;
+                default:
+                    playerService.setLanguage(Locale.ENGLISH);
+            }
         }
     }
 

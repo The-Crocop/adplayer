@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="tts_languages">
-        <item>GERMAN</item>
         <item>ENGLISH</item>
+        <item>GERMAN</item>
         <item>ITALIAN</item>
         <item>FRENCH</item>
     </string-array>

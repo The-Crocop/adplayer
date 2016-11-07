@@ -32,10 +32,6 @@
         android:layout_alignParentStart="true"
         android:layout_marginTop="41dp"/>
 
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-              android:textAppearance="?android:attr/textAppearanceLarge" android:text="Language"
-              android:id="@+id/languageTextView"
-              android:layout_below="@+id/pathEditText" android:layout_alignParentStart="true"/>
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -51,7 +47,7 @@
         android:layout_alignTop="@+id/pathTextView"
         android:layout_alignStart="@+id/hostEditText"
         android:layout_alignParentEnd="true"
-        android:text="audioDescription"/>
+        android:text="la_boheme_ad"/>
 
     <Button
             android:layout_width="wrap_content"
@@ -62,27 +58,30 @@
             android:layout_centerVertical="true" android:layout_alignParentStart="true"/>
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="New Text"
-        android:id="@+id/textView"
-        android:layout_below="@+id/connectButton"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="45dp"
-        android:singleLine="false"
-        android:lines="3"
-        android:layout_alignEnd="@+id/pathEditText"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New Text"
+            android:id="@+id/textView"
+            android:singleLine="false"
+            android:lines="3"
+            android:layout_below="@+id/connectButton" android:layout_alignParentStart="true"
+            android:layout_marginTop="52dp" android:layout_alignEnd="@+id/tts_spinner"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="not connected"
         android:id="@+id/stateTextView"
-        android:layout_alignTop="@+id/textView" android:layout_alignEnd="@+id/hostEditText"/>
+        android:layout_centerVertical="true" android:layout_toEndOf="@+id/hostEditText"/>
     <Spinner
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/tts_spinner"
-            android:layout_below="@+id/pathEditText" android:layout_toEndOf="@+id/connectButton"
-            android:spinnerMode="dropdown"/>
+            android:spinnerMode="dropdown"
+            android:layout_below="@+id/pathEditText" android:layout_alignStart="@+id/pathEditText"
+            android:layout_alignEnd="@+id/hostEditText"/>
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+              android:textAppearance="?android:attr/textAppearanceLarge" android:text="Lanuage"
+              android:id="@+id/textView2"
+              android:layout_below="@+id/pathEditText" android:layout_alignParentStart="true"/>
 </RelativeLayout>
