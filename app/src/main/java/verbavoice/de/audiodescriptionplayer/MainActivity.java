@@ -5,7 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.*;
-import android.speech.tts.TextToSpeech;
+
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -16,7 +17,7 @@ import de.lits.infinoted.InfinotedClientException;
 
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener, NumberPicker.OnValueChangeListener{
 
     private PlayerService playerService;
     boolean bound = false;
@@ -27,8 +28,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private EditText pathEditText;
     private TextView textView;
     private TextView stateTextView;
-    private Button connectBtn;
+    private FloatingActionButton connectBtn;
     private Spinner spinner;
+    private NumberPicker picker;
+    String[] rates = {"1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9", "2.0"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,13 +40,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        connectBtn = (Button) findViewById(R.id.connectButton);
+
+
+        connectBtn = (FloatingActionButton) findViewById(R.id.connectButton);
         hostEditText = (EditText)findViewById(R.id.hostEditText);
         pathEditText = (EditText)findViewById(R.id.pathEditText);
         textView = (TextView)findViewById(R.id.textView);
         stateTextView = (TextView) findViewById(R.id.stateTextView);
         spinner = (Spinner) findViewById(R.id.tts_spinner);
+        picker = (NumberPicker) findViewById(R.id.numberPicker);
+
         initializeSpinner();
+        initializeNumberPicker();
 
     }
 
@@ -120,6 +128,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         return true;
     }
 
+    @Override
+    public void onValueChange(NumberPicker numberPicker, int i, int i1) {
+        int index = numberPicker.getValue();
+        String val = rates[index];
+        float selectedFloat = Float.parseFloat(val);
+        playerService.setSpeechRate(selectedFloat);
+    }
 
 
     public class MessageHandler extends  Handler {
@@ -184,7 +199,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                connectBtn.setText(R.string.connect);
+                connectBtn.setImageDrawable(getDrawable(R.drawable.ic_play_arrow_white_24dp));
                 stateTextView.setText("error:"+ message);
             }
         });
@@ -194,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                connectBtn.setText(R.string.connect);
+                connectBtn.setImageDrawable(getDrawable(R.drawable.ic_play_arrow_white_24dp));
                 stateTextView.setText("on Connection Error");
             }
         });
@@ -206,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             public void run() {
                 Toast.makeText(MainActivity.this,"connected!",Toast.LENGTH_SHORT).show();
                 stateTextView.setText("Connected!");
-                connectBtn.setText(R.string.disconnect);
+                connectBtn.setImageDrawable(getDrawable(R.drawable.ic_stop_white_24dp));
             }
         });
     }
@@ -214,8 +229,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private void init(String text, ConnectionState connectionState) {
         updateText(text);
         stateTextView.setText(connectionState.name());
-        if(!(connectionState == ConnectionState.CONNECTED))connectBtn.setText(R.string.connect);
-        else  connectBtn.setText(R.string.disconnect);
+        if(!(connectionState == ConnectionState.CONNECTED))connectBtn.setImageDrawable(getDrawable(R.drawable.ic_play_arrow_white_24dp));
+        else  connectBtn.setImageDrawable(getDrawable(R.drawable.ic_stop_white_24dp));
 
     }
 
@@ -252,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             connectBtn.getHandler().post(new Runnable() {
                 @Override
                 public void run() {
-                    connectBtn.setText(R.string.connect);
+                    connectBtn.setBackground(getDrawable(R.drawable.ic_play_arrow_white_24dp));
                     stateTextView.setText(R.string.disconnect);
                 }
             });
@@ -265,6 +280,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(this);
     }
+
+    public void initializeNumberPicker() {
+        picker.setMaxValue(rates.length-1);
+        picker.setMinValue(0);
+        picker.setDisplayedValues(rates);
+        picker.setWrapSelectorWheel(false);
+        picker.setValue(4);
+        picker.setOnValueChangedListener(this);
+    }
+
 
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {

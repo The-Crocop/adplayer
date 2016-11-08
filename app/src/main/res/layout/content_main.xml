@@ -23,22 +23,21 @@
         android:layout_alignParentStart="true"/>
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Path"
-        android:id="@+id/pathTextView"
-        android:layout_below="@+id/hostTextView"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="41dp"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Path"
+            android:id="@+id/pathTextView"
+            android:layout_marginTop="27dp" android:layout_below="@+id/hostTextView"
+            android:layout_alignEnd="@+id/hostTextView"/>
 
     <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/hostEditText"
-        android:text="146.148.8.138"
-        android:layout_alignTop="@+id/hostTextView"
-        android:layout_toEndOf="@+id/connectButton"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/hostEditText"
+            android:text="146.148.8.138"
+            android:layout_alignTop="@+id/hostTextView"
+            android:layout_toEndOf="@+id/stateTextView" android:layout_alignEnd="@+id/textView"/>
 
     <EditText
         android:layout_width="wrap_content"
@@ -49,14 +48,6 @@
         android:layout_alignParentEnd="true"
         android:text="la_boheme_ad"/>
 
-    <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="connect"
-            android:id="@+id/connectButton"
-            android:onClick="connect"
-            android:layout_centerVertical="true" android:layout_alignParentStart="true"/>
-
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -64,24 +55,42 @@
             android:id="@+id/textView"
             android:singleLine="false"
             android:lines="3"
-            android:layout_below="@+id/connectButton" android:layout_alignParentStart="true"
-            android:layout_marginTop="52dp" android:layout_alignEnd="@+id/tts_spinner"/>
+            android:layout_below="@+id/numberPicker"
+            android:layout_marginTop="56dp" android:backgroundTint="#d8d816" android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="not connected"
         android:id="@+id/stateTextView"
-        android:layout_centerVertical="true" android:layout_toEndOf="@+id/hostEditText"/>
+        android:layout_below="@+id/numberPicker" android:layout_alignParentStart="true"/>
     <Spinner
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/tts_spinner"
             android:spinnerMode="dropdown"
             android:layout_below="@+id/pathEditText" android:layout_alignStart="@+id/pathEditText"
-            android:layout_alignEnd="@+id/hostEditText"/>
+            android:layout_alignEnd="@+id/pathEditText" android:layout_above="@+id/numberPicker"/>
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
               android:textAppearance="?android:attr/textAppearanceLarge" android:text="Lanuage"
               android:id="@+id/textView2"
               android:layout_below="@+id/pathEditText" android:layout_alignParentStart="true"/>
+    <NumberPicker
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/numberPicker"
+            android:orientation="horizontal"
+            android:layout_centerVertical="true" android:layout_alignStart="@+id/tts_spinner"/>
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+              android:textAppearance="?android:attr/textAppearanceLarge" android:text="Speed"
+              android:id="@+id/textView3"
+              android:layout_alignTop="@+id/numberPicker" android:layout_alignParentStart="true"/>
+    <android.support.design.widget.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|right"
+            android:id="@+id/connectButton"
+            android:src="@drawable/ic_play_arrow_white_24dp"
+            android:onClick="connect" android:layout_below="@+id/textView" android:layout_alignParentEnd="true"/>
 </RelativeLayout>

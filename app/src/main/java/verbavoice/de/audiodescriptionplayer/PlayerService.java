@@ -82,7 +82,7 @@ public class PlayerService extends Service implements TextToSpeech.OnInitListene
         @Override
         public void onTextUpdate(final String text) {
             connectionState = ConnectionState.CONNECTED;
-            textToSpeech.speak(text,TextToSpeech.QUEUE_FLUSH,null);
+            textToSpeech.speak(text,TextToSpeech.QUEUE_ADD,null);
             lastText = text;
             sendMessage(PlayerMessages.TEXT_UPDATE,text);
 
@@ -205,6 +205,10 @@ public class PlayerService extends Service implements TextToSpeech.OnInitListene
                         0));
         // send the notification
         startForeground(NOTIFICATION_ID,m_notificationBuilder.build());
+    }
+
+    public int setSpeechRate(float speechRate) {
+        return textToSpeech.setSpeechRate(speechRate);
     }
 
     public void dismissNotification(){
